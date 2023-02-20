@@ -1,11 +1,20 @@
 
 ## v2ray
 ### 安装v2ray
-bash <(curl -L -s https://install.direct/go.sh) 
 
-安装后的目录: /etc/v2ray/
+[bash <(curl -L -s https://install.direct/go.sh) ](https://github.com/v2fly/fhs-install-v2ray/blob/master/README.zh-Hans-CN.md
 
-配置: /etc/v2ray/config.json
+安装可执行文件和 .dat 数据文件
+```bash <(curl -L https://raw.githubusercontent.com/v2fly/fhs-install-v2ray/master/install-release.sh)```
+
+
+只更新 .dat 数据文件
+```bash <(curl -L https://raw.githubusercontent.com/v2fly/fhs-install-v2ray/master/install-dat-release.sh)```
+
+
+安装后的目录: /usr/local/etc/v2ray/
+
+配置: /usr/local/etc/v2ray/config.json
 ```
 {
   "inbounds": [{
@@ -44,11 +53,9 @@ bash <(curl -L -s https://install.direct/go.sh)
 ```
 
 ### 操作
-service v2ray start
+systemctl enable v2ray;
 
-service v2ray stop
-
-service v2ray restart
+systemctl restart v2ray;
 
 
 ## HTTPS
@@ -58,24 +65,15 @@ wall.doaminname.com
 curl  https://get.acme.sh | sh
 ### 安装工具
 yum install socat
+### 注册zerossl账号
+~/.acme.sh/acme.sh --register-account  -m xxx@mail.com --server zerossl
 ### 安装HTTPS证书
 ~/.acme.sh/acme.sh --issue -d wall.doaminname.com --standalone -k ec-256
 ### 安装证书到v2ray目录下
-~/.acme.sh/acme.sh --installcert -d wall.doaminname.com --fullchainpath /etc/v2ray/v2ray.crt --keypath /etc/v2ray/v2ray.key --ecc 
+~/.acme.sh/acme.sh --installcert -d wall.doaminname.com --fullchainpath /usr/local/etc/v2ray/v2ray.crt --keypath /usr/local/etc/v2ray/v2ray.key --ecc 
 
 
 ## 安装nginx
-创建文件/etc/yum.repos.d/nginx.repo
-加入以下内容
-
-```
-[nginx]
-name=nginx repo
-baseurl=http://nginx.org/packages/centos/7/$basearch/
-gpgcheck=0
-enabled=1
-```
-
 安装
 yum install -y nginx
 
