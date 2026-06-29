@@ -81,17 +81,56 @@ yum install -y nginx
 service nginx start
 
 ### 配置nginx
-/etc/nginx/conf.d/default.conf
+/etc/nginx/nginx.conf
+```
+# For more information on configuration, see:
+#   * Official English Documentation: http://nginx.org/en/docs/
+#   * Official Russian Documentation: http://nginx.org/ru/docs/
+
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log;
+pid /run/nginx.pid;
+
+# Load dynamic modules. See /usr/share/doc/nginx/README.dynamic.
+include /usr/share/nginx/modules/*.conf;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile            on;
+    tcp_nopush          on;
+    tcp_nodelay         on;
+    keepalive_timeout   65;
+    types_hash_max_size 4096;
+
+    include             /etc/nginx/mime.types;
+    default_type        application/octet-stream;
+
+    include /etc/nginx/conf.d/*.conf;
+}
+```
+/etc/nginx/conf.d/v2ray-nginx.conf
 ```
 server {
-  listen  443 ssl;
-  ssl on;
-  ssl_certificate       /etc/v2ray/v2ray.crt;
-  ssl_certificate_key   /etc/v2ray/v2ray.key;
-  ssl_protocols         TLSv1 TLSv1.1 TLSv1.2;
+  listen  443 ssl http2;
+  ssl_certificate       /usr/local/etc/v2ray/v2ray.crt;
+  ssl_certificate_key   /usr/local/etc/v2ray/v2ray.key;
+  ssl_protocols         TLSv1.2 TLSv1.3;
   ssl_ciphers           HIGH:!aNULL:!MD5;
+  ssl_session_cache shared:SSL:10m;
+  ssl_session_timeout  30m;
+  ssl_prefer_server_ciphers off;
   server_name           wall.doaminname.com;
-        location /ray {
+        location /index {
           proxy_redirect off;
           proxy_pass http://127.0.0.1:10000;
           proxy_http_version 1.1;
@@ -114,4 +153,19 @@ service v2ray restart
 
 service nginx restart
 
+
+### 注意事项
+v2ray目录: /usr/local/etc/v2ray/
+v2ray日志: /var/log/v2ray
+
+nginx目录: /etc/nginx/
+nginx日志: /var/log/nginx
+
+2026/06/29 14:20:23 127.0.0.1:39162 rejected  common/drain: common/drain: drained connection > proxy/vmess/encoding: invalid user: VMessAEAD is enforced and a non VMessAEAD connection is received. You can still disable this security feature with environment variable v2ray.vmess.aead.forced = false . You will not be able to enable legacy header workaround in the future.
+为了解决上述问题，修改以下文件  /etc/systemd/system/v2ray.service
+增加配置:  Environment="V2RAY_VMESS_AEAD_FORCED=false" 
+
+修改完后执行命令:
+systemctl daemon-reload
+service v2ray restart
 
